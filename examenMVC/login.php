@@ -1,5 +1,6 @@
 <?php
 session_start();
+include 'log.php';
 ?>
 <!DOCTYPE html>
 <html>
@@ -47,6 +48,7 @@ session_start();
                 echo '<script>alert("Bienvenido");</script>';
                 $_SESSION['privilegio'] = $usuario[0][4];
                 $_SESSION['nombre'] = $usuario[0][1]." ".$usuario[0][2]." ".$usuario[0][3];
+                mensaje_log($_SESSION['nombre']);
                 header("Location: index.php");
             }
             else
