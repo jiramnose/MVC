@@ -1,4 +1,5 @@
 <?php
+session_start();
 function mensaje_log($mensaje) {
 $date = date ("Y-m-d H:i:5');
 $log message = "[{$date)}] ({$mensaje})\n";
