@@ -1,0 +1,62 @@
+// Definiciones de pines y frecuencias
+#define NUM_SENSORS 8
+int trigPins[NUM_SENSORS] = {13, 14, 26, 33, 15, 16, 17, 19};
+int echoPins[NUM_SENSORS] = {12, 27, 25, 32, 2, 4, 5, 18};
+#define BUZZER_PIN 21
+
+int notes[NUM_SENSORS] = {261, 293, 329, 349, 392, 440, 493, 523};  // Frecuencias de las notas (C4, D4, E4, F4, G4, A4, B4, C5)
+long distances[NUM_SENSORS];  // Almacenar distancias medidas
+int currentNote = -1;  // Para rastrear la nota actual que se está tocando
+
+void setup() {
+  Serial.begin(115200);  // Puedes comentar o eliminar esta línea si no necesitas impresión en el monitor serial
+  for (int i = 0; i < NUM_SENSORS; i++) {
+    pinMode(trigPins[i], OUTPUT);
+    pinMode(echoPins[i], INPUT);
+  }
+  pinMode(BUZZER_PIN, OUTPUT);
+}
+
+void loop() {
+  long closestDistance = 1000;  // Inicializa con un valor alto
+  int closestSensor = -1;  // Inicializa con un valor inválido
+
+  for (int i = 0; i < NUM_SENSORS; i++) {
+    long duration, distance;
+    
+    // Generar un pulso de 10us en el pin TRIG
+    digitalWrite(trigPins[i], LOW);
+    delayMicroseconds(2);
+    digitalWrite(trigPins[i], HIGH);
+    delayMicroseconds(10);
+    digitalWrite(trigPins[i], LOW);
+    
+    // Leer el tiempo que tarda el pulso en volver al pin ECHO
+    duration = pulseIn(echoPins[i], HIGH);
+    
+    // Calcular la distancia en cm
+    distance = (duration / 2) / 29.1;
+    distances[i] = distance;  // Almacenar la distancia medida
+    
+    // Si la distancia es menor a un umbral (por ejemplo, 20 cm) y es la menor distancia, actualizar
+    if (distance < 20 && distance < closestDistance) {
+      closestDistance = distance;
+      closestSensor = i;
+    }
+    
+    // Pequeña pausa para evitar interferencias entre mediciones
+    // Puedes reducir este valor para aumentar la velocidad de respuesta, pero ten en cuenta que puede haber interferencias
+    delay(10);
+  }
+
+  // Si se detectó un sensor cercano y es diferente al sensor actual, tocar la nota correspondiente
+  if (closestSensor != -1 && closestSensor != currentNote) {
+    tone(BUZZER_PIN, notes[closestSensor]);  // Tocar la nota correspondiente al sensor más cercano
+    currentNote = closestSensor;  // Actualizar la nota actual
+  } else if (closestSensor == -1) {
+    noTone(BUZZER_PIN);  // No tocar ninguna nota si no hay sensores activados
+    currentNote = -1;  // Resetear la nota actual
+  }
+
+  delay(10);  // Puedes reducir este valor para aumentar la velocidad de respuesta, pero ten en cuenta que puede haber interferencias
+}
